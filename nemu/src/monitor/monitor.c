@@ -41,6 +41,8 @@ static void welcome() {
 
 void sdb_set_batch_mode();
 
+//加了static修饰之后，作用域就是这个.c文件；不加作用域就是整个工程。
+//避免了工程中的全局变量重名。
 static char *log_file = NULL;
 static char *diff_so_file = NULL;
 static char *img_file = NULL;
@@ -67,7 +69,7 @@ static long load_img() {
   fclose(fp);
   return size;
 }
-
+//argc=2, argv="/home/../interpreter, --log=/home/../build/log.txt,getopt_long不解析argv[0]"
 static int parse_args(int argc, char *argv[]) {
   const struct option table[] = {
     {"batch"    , no_argument      , NULL, 'b'},
@@ -78,6 +80,7 @@ static int parse_args(int argc, char *argv[]) {
     {0          , 0                , NULL,  0 },
   };
   int o;
+  //根据table表解析读入的argv[1]-~,参数会被放到全局变量optarg里面
   while ( (o = getopt_long(argc, argv, "-bhl:d:p:", table, NULL)) != -1) {
     switch (o) {
       case 'b': sdb_set_batch_mode(); break;
