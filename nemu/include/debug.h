@@ -24,6 +24,11 @@
     _Log(ANSI_FMT("[%s:%d %s] " format, ANSI_FG_BLUE) "\n", \
         __FILE__, __LINE__, __func__, ## __VA_ARGS__)
 
+//MUXDEF(a,b,c),如果a满足，就执行b，否则执行c
+// IFNDEF(macro, ... )
+// 如果 macro 未定义，则 ... 部分的代码被保留
+// 如果 macro 已定义，则 ... 部分的代码被忽略（移除）
+//assert_fail_msg主要为了展示isa，后面再深究
 #define Assert(cond, format, ...) \
   do { \
     if (!(cond)) { \

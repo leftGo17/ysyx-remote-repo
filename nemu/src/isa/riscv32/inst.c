@@ -49,13 +49,13 @@ static int decode_exec(Decode *s) {
   int rd = 0;
   word_t src1 = 0, src2 = 0, imm = 0;
   s->dnpc = s->snpc;
-
+//INST==instruction PAT==pattern,加(s)是为了保证宏展开的安全性
 #define INSTPAT_INST(s) ((s)->isa.inst.val)
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */ ) { \
   decode_operand(s, &rd, &src1, &src2, &imm, concat(TYPE_, type)); \
   __VA_ARGS__ ; \
 }
-
+//INSTPAT_START 和 INSTPAT_END插入了一个代码块
   INSTPAT_START();
   INSTPAT("??????? ????? ????? ??? ????? 00101 11", auipc  , U, R(rd) = s->pc + imm);
   INSTPAT("??????? ????? ????? 100 ????? 00000 11", lbu    , I, R(rd) = Mr(src1 + imm, 1));
@@ -69,7 +69,8 @@ static int decode_exec(Decode *s) {
 
   return 0;
 }
-
+//这里传地址，是因为要改变snpc的值，用地址传递才可以改
+//把pmem读出的四字节数据，也就是uint32_t类型数据，放到s.isa.inst.val里面
 int isa_exec_once(Decode *s) {
   s->isa.inst.val = inst_fetch(&s->snpc, 4);
   return decode_exec(s);

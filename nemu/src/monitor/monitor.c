@@ -16,6 +16,7 @@
 #include <isa.h>
 #include <memory/paddr.h>
 
+//直接在此处定义了函数的类型，可以不需要额外的include；编译器在最后链接的时候，会正确的找到这个同名的函数。
 void init_rand();
 void init_log(const char *log_file);
 void init_mem();
@@ -32,8 +33,6 @@ static void welcome() {
   Log("Build time: %s, %s", __TIME__, __DATE__);
   printf("Welcome to %s-NEMU!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
   printf("For help, type \"help\"\n");
-  Log("Exercise: Please remove me in the source code and compile NEMU again.");
-  assert(0);
 }
 
 #ifndef CONFIG_TARGET_AM

@@ -46,12 +46,15 @@
 #define __P_ONE_1  X,
 #define __P_ZERO_0 X,
 // define some selection functions based on the properties of BOOLEAN macro
+//检查 macro 是否被定义为 0 或 1（即一个“布尔型”宏）。如果是，则展开为 X；否则展开为 Y。
 #define MUXDEF(macro, X, Y)  MUX_MACRO_PROPERTY(__P_DEF_, macro, X, Y)
 #define MUXNDEF(macro, X, Y) MUX_MACRO_PROPERTY(__P_DEF_, macro, Y, X)
+//检查 macro 是否被精确地定义为 1。如果是，则 X；否则 Y检查 macro 是否被精确地定义为 1。如果是，则 X；否则 Y
 #define MUXONE(macro, X, Y)  MUX_MACRO_PROPERTY(__P_ONE_, macro, X, Y)
 #define MUXZERO(macro, X, Y) MUX_MACRO_PROPERTY(__P_ZERO_,macro, X, Y)
 
 // test if a boolean macro is defined
+//返回一个整数 1（如果 macro 被定义为 0 或 1）或 0（其他情况）。本质上是判断一个宏是否是“布尔型已定义”。
 #define ISDEF(macro) MUXDEF(macro, 1, 0)
 // test if a boolean macro is undefined
 #define ISNDEF(macro) MUXNDEF(macro, 1, 0)
@@ -68,6 +71,7 @@
 #define __IGNORE(...)
 #define __KEEP(...) __VA_ARGS__
 // keep the code if a boolean macro is defined
+//(_VA_ARGS_)被_KEEP或者_IGNORE所调用
 #define IFDEF(macro, ...) MUXDEF(macro, __KEEP, __IGNORE)(__VA_ARGS__)
 // keep the code if a boolean macro is undefined
 #define IFNDEF(macro, ...) MUXNDEF(macro, __KEEP, __IGNORE)(__VA_ARGS__)
@@ -81,15 +85,19 @@
 // NOTE1: `c` should be defined as a list like:
 //   f(a0) f(a1) f(a2) ...
 // NOTE2: each element in the container can be a tuple
+//c是一个函数,f是参数
 #define MAP(c, f) c(f)
-
+//BITMASK将最低的bits位设置为1
+//BITS提取hi-lo的位
+//SEXT按照len位有符号数进行扩展
 #define BITMASK(bits) ((1ull << (bits)) - 1)
 #define BITS(x, hi, lo) (((x) >> (lo)) & BITMASK((hi) - (lo) + 1)) // similar to x[hi:lo] in verilog
 #define SEXT(x, len) ({ struct { int64_t n : len; } __x = { .n = x }; (uint64_t)__x.n; })
 
+//用于内存数据对齐
 #define ROUNDUP(a, sz)   ((((uintptr_t)a) + (sz) - 1) & ~((sz) - 1))
 #define ROUNDDOWN(a, sz) ((((uintptr_t)a)) & ~((sz) - 1))
-
+//PAGE_ALIGN页对齐
 #define PG_ALIGN __attribute((aligned(4096)))
 
 #if !defined(likely)

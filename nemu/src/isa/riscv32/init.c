@@ -26,6 +26,7 @@ static const uint32_t img [] = {
   0xdeadbeef,  // some data
 };
 
+//cpu在isa.h中定义
 static void restart() {
   /* Set the initial program counter. */
   cpu.pc = RESET_VECTOR;

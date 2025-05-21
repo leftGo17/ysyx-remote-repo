@@ -24,6 +24,16 @@ const char *regs[] = {
 };
 
 void isa_reg_display() {
+  int NR_reg;
+  MUXDEF(CONFIG_ISA64, NR_reg=64, NR_reg=32);
+  int i;
+  for (i = 0; i < NR_reg; i+=1)
+  {
+    if (gpr(i) == 0)
+      printf("the data of %s is 0x00000000\n", regs[i]);
+    else
+      printf("the data of %s is %#010x\n", regs[i], gpr(i));
+  }
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {

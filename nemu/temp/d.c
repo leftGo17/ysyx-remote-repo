@@ -1,43 +1,28 @@
-/***************************************************************************************
-* Copyright (c) 2014-2022 Zihao Yu, Nanjing University
-*
-* NEMU is licensed under Mulan PSL v2.
-* You can use this software according to the terms and conditions of the Mulan PSL v2.
-* You may obtain a copy of Mulan PSL v2 at:
-*          http://license.coscl.org.cn/MulanPSL2
-*
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-*
-* See the Mulan PSL v2 for more details.
-***************************************************************************************/
-
-#include <isa.h>
-
-/* We use the POSIX regex functions to process regular expressions.
- * Type 'man regex' for more information about POSIX regex functions.
- */
 #include <regex.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <assert.h>
+#include <regex.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+#include <stdlib.h> // 为了 free()
+#include <string.h> // 为了 strcmp()
 
-// enum {
-//   TK_NOTYPE = 256, TK_DEC_INT, TK_EQ,
-
-//   /* TODO: Add more token types */
-
-// };
-
+#define word_t uint32_t
 enum {
   TK_NOTYPE = 256, // Example, ensure it doesn't clash with char values
   TK_DEC_INT,
   TK_NUMBER = TK_DEC_INT, // Alias
-  TK_EQ,
   TK_LPAREN = '(',
   TK_RPAREN = ')',
   TK_PLUS = '+',
   TK_MINUS = '-',
   TK_MUL = '*',
-  TK_DIV = '/'
+  TK_DIV = '/',
+  TK_EQ
 };
 static struct rule {
   const char *regex;
@@ -58,6 +43,7 @@ static struct rule {
   {"==", TK_EQ},             // 双等号 
 };
 
+#define ARRLEN(arr) (int)(sizeof(arr) / sizeof(arr[0]))
 #define NR_REGEX ARRLEN(rules)
 
 static regex_t re[NR_REGEX] = {};
@@ -74,7 +60,7 @@ void init_regex() {
     ret = regcomp(&re[i], rules[i].regex, REG_EXTENDED);
     if (ret != 0) {
       regerror(ret, &re[i], error_msg, 128);
-      panic("regex compilation failed: %s\n%s", error_msg, rules[i].regex);
+      assert(0);
     }
   }
 }
@@ -83,7 +69,7 @@ typedef struct token {
   int type;
   char str[32];
 } Token;
-/*__attribute__((used)): 以防止编译器优化掉这个变量，如果编译器认为变量未使用，它可能会为了节省空间而移除它。*/
+
 static Token tokens[32] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 
@@ -101,7 +87,7 @@ static bool make_token(char *e) {
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
 
-        Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
+        printf("match rules[%d] = \"%s\" at position %d with len %d: %.*s\n",
             i, rules[i].regex, position, substr_len, substr_len, substr_start);
 
         // 记录 token 信息
@@ -109,9 +95,9 @@ static bool make_token(char *e) {
           case TK_NOTYPE:
             // 如果是空格串 (TK_NOTYPE)，则忽略，不记录
             break;
-          
+
           case TK_DEC_INT: // 十进制整数
-          default:         
+          default:
             if (nr_token >= 32) { // 检查 tokens 数组是否已满 (假设tokens数组大小为32)
               printf("Error: Too many tokens. Token array is full. (at position %d)\n", position);
               return false; // Token 数组已满，词法分析失败
@@ -274,11 +260,13 @@ static word_t eval(int p, int q, bool *success_flag) {
 }
 
 word_t expr(char *e, bool *success) {
+  printf("!!\n");  
   if (!make_token(e)) {
     *success = false;
     return 0;
   }
-
+  int i = 0;
+  for (i = 0; i < nr_token; i++)printf("%i:%d:%s\n",i,tokens[i].type,tokens[i].str);
   if (nr_token == 0) {
     *success = false;
     return 0;
@@ -291,5 +279,33 @@ word_t expr(char *e, bool *success) {
     return 0; 
   }
   return result;
+}
+
+int main()
+{
+    char *line_read = NULL; 
+    //char *prompt = "请输入内容 (输入 'q' 退出): "; 
+    while (1) {
+        line_read = readline("(nemu) ");
+        if (line_read == NULL) {
+            printf("\n读取到文件尾或发生错误程序退出。\n");
+            break; // 退出循环
+        }
+        if (strcmp(line_read, "q") == 0) {
+            printf("检测到退出指令 'q'，程序结束。\n");
+            free(line_read); // 释放为 "q" 分配的内存
+            break;           // 退出循环
+        }
+        char *str = line_read;
+        bool success = true;
+        init_regex();
+        word_t ans = expr(str, &success);
+        if (success)printf("%u\n",ans);
+        else printf("error\n");
+
+        free(line_read);
+        line_read = NULL; // 将指针置空，好习惯
+    }
+    return 0;
 }
 

@@ -38,6 +38,7 @@ static uint64_t get_time_internal() {
   return us;
 }
 
+//用bool_time来获取一个基准时间，以后获得的时间都减去这个值即可
 uint64_t get_time() {
   if (boot_time == 0) boot_time = get_time_internal();
   uint64_t now = get_time_internal();
