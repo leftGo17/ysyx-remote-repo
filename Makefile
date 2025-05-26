@@ -24,6 +24,13 @@ define git_commit
 	-@sync $(LOCK_DIR)
 endef
 
+count:
+	@echo "Counting lines in nemu/..."
+	@find nemu/ -type f \( -name "*.c" -o -name "*.h" \) | xargs cat | wc -l
+	@echo "Non-empty lines in nemu/..."
+	@find nemu/ -type f \( -name "*.c" -o -name "*.h" \) | xargs cat | grep -v '^$$' | wc -l
+
+
 .git_commit:
 	-@while (test -e .git/index.lock); do sleep 0.1; done;               `# wait for other git instances`
 	-@git branch $(TRACER_BRANCH) -q 2>/dev/null || true                 `# create tracer branch if not existent`
@@ -41,4 +48,4 @@ endef
 _default:
 	@echo "Please run 'make' under subprojects."
 
-.PHONY: .git_commit .clean_index _default
+.PHONY: .git_commit .clean_index _default count

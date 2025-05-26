@@ -86,6 +86,7 @@ static void gen_rand_expr_recursive(int depth) {
     return;
   }
   int choice = choose(3);
+  //printf("%d\n",choice);
   switch (choice) {
     case 0: // 规则1: <expr> ::= <number>
       gen_num();

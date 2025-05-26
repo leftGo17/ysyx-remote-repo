@@ -20,16 +20,12 @@
 #include "sdb.h"
 #include <memory/vaddr.h>
 
+
 static int is_batch_mode = false;
 
 void init_regex();
 void init_wp_pool();
 
-/*如果成功读取一行，readline 会返回一个指向新分配内存的指针，该内存中存储了用户输入的文本行（不包括最后的换行符 \n）。
-重要: 返回的字符串是使用 malloc() 动态分配的，因此调用者在使用完毕后必须使用 free() 来释放这块内存，以避免内存泄漏。
-如果用户输入了一个空行（直接按回车），它会返回一个空字符串（不是 NULL）。
-如果遇到文件结束符 (EOF，通常通过在行首按 Ctrl+D 输入)，且当前行是空的，readline 会返回 NULL。
-如果行内已有字符再输入 EOF，通常行为是将 EOF 视为换行符。*/
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
   static char *line_read = NULL;
@@ -80,6 +76,7 @@ static int cmd_info(char * args){
     return 0;
   }
   else if (strcmp(args, "w") == 0){
+    print_wp_info();
     return 0;
   }
   else
@@ -91,19 +88,28 @@ static int cmd_x(char * args){
   char *arg2 = strtok(NULL, " ");
   if (arg1 == NULL || arg2 == NULL)
   {
-    printf("Please enter \"x N EXPR\"\n");
+    Log("Please enter \"x N EXPR\"\n");
     return 0;
   }
   int n = atoi(arg1);
-  vaddr_t addr = strtoul(arg2, NULL, 0);
-  int i;
-  for (i = 0; i < n; i+=1)
+  bool success;
+  word_t ans;
+  ans = expr(arg2, &success);
+  if (success)
   {
-    int len = 4;
-    uint32_t data = vaddr_read(addr, len);
-    printf("addr=%010x; data=%010x\n", addr, data);
-    addr += 4;
+    printf("address-expr=0x%08x\n", ans);
+    vaddr_t addr = ans;
+    int i;
+    for (i = 0; i < n; i+=1)
+    {
+      int len = 4;
+      word_t data = vaddr_read(addr, len);
+      printf("addr=0x%08x; data=0x%08x\n", addr, data);
+      addr += 4;
+    }
   }
+  else Log("Error expr\n");
+
   return 0;
 }
 
@@ -111,20 +117,62 @@ static int cmd_p(char * args){
   bool success;
   word_t ans;
   ans = expr(args, &success);
-  if (success)printf("expr=%u\n", ans);
-  else printf("error_expr\n");
+  if (success)
+  {
+    printf("DEC:expr=%u\n", ans); 
+    printf("HEX:expr=0x%08x\n", ans);
+  }
+  else Log("error_expr\n");
   return 0;
 }
 
 static int cmd_w(char * args){
+  sdb_set_watchpoint(args);
   return 0;
 }
 
 static int cmd_d(char * args){
+  sdb_del_watchpoint(args);
+  return 0;
+}
+
+void test_expr();
+static int cmd_test(char * args){
+  test_expr();
   return 0;
 }
 
 static int cmd_help(char *args);
+
+void test_expr(){
+  //printf("try test_expr!\n");
+  FILE *filee;
+  char line[256];
+  char *str1, *str2;
+
+  filee = fopen("/home/zjp/code/ysyx-workbench/nemu/src/monitor/sdb/data_input", "r"); 
+  if (filee == NULL) {
+      Log("open failed!\n");
+      perror("Error opening file");
+  }
+  //if (filee != NULL)printf("test!!\n");
+
+  //char *test=fgets(line, sizeof(line), filee);
+ //printf("%s\n",test);
+  while (fgets(line, sizeof(line), filee) != NULL) {
+      line[strcspn(line, "\n")] = 0;
+      //printf("try find different!\n");
+      str1 = strtok(line, " "); 
+      str2 = strtok(NULL, " "); 
+      bool success;
+      word_t ans;
+      ans = expr(str2, &success);
+      if (success)printf("expr=%u %s\n", ans, str1);
+      else printf("error_expr!!\n");
+  }
+  //printf("test!!\n");
+  fclose(filee);
+}
 
 /*int (*handler) (char *); 定义了一个名为 handler 的变量，这个变量是一个指针，它可以指向任何满足以下条件的函数：
 接受一个 char * 类型的参数。
@@ -143,8 +191,8 @@ static struct {
   { "x", "x N EXPR: Print N types from the begin of address  EXPR", cmd_x},
   { "p", "p EXPR: Caculate the date of EXPR", cmd_p},
   { "w", "w EXPR: Set watchpools and stop when the data change", cmd_w},
-  { "d", "d N: Delete N-th watchpool", cmd_d}
-
+  { "d", "d N: Delete N-th watchpool", cmd_d},
+  { "test", "test expr", cmd_test}
   /* TODO: Add more commands */
 };
 
@@ -170,7 +218,7 @@ static int cmd_help(char *args) {
         return 0;
       }
     }
-    printf("Unknown command '%s'\n", arg);
+    Log("Unknown command '%s'\n", arg);
   }
   return 0;
 }
@@ -180,6 +228,8 @@ void sdb_set_batch_mode() {
 }
 
 void sdb_mainloop() {
+
+  //test_expr();
   if (is_batch_mode) {
     cmd_c(NULL);
     return;
@@ -218,7 +268,7 @@ void sdb_mainloop() {
         break;
       }
     }
-    if (i == NR_CMD) { printf("Unknown command '%s'\n", cmd); }
+    if (i == NR_CMD) { Log("Unknown command '%s'\n", cmd); }
   }
 }
 

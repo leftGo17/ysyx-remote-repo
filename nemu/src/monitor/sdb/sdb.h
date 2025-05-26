@@ -20,4 +20,14 @@
 
 word_t expr(char *e, bool *success);
 
+
+void init_wp_pool();
+//参数为表达式
+void sdb_set_watchpoint(char *args);
+//参数为watchpoint的id
+void sdb_del_watchpoint(char *args);
+void print_wp_info();
+
+bool check_watchpoints(); 
+
 #endif

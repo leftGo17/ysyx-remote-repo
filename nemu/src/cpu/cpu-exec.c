@@ -18,12 +18,14 @@
 #include <cpu/difftest.h>
 #include <locale.h>
 
+
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
  * This is useful when you use the `si' command.
  * You can modify this value as you want.
  */
 #define MAX_INST_TO_PRINT 10
+#define CONFIG_WATCHPOINT 1
 
 CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
@@ -31,6 +33,7 @@ static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
 void device_update();
+bool check_watchpoints();
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
@@ -38,6 +41,10 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
+  bool triggered = false;
+  IFDEF(CONFIG_WATCHPOINT, triggered = check_watchpoints());
+  if (triggered) {
+    nemu_state.state = NEMU_STOP;}
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {

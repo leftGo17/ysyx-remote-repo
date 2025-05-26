@@ -14,11 +14,11 @@
 ***************************************************************************************/
 
 #include <common.h>
-
 void init_monitor(int, char *[]);
 void am_init_monitor();
 void engine_start();
 int is_exit_status_bad();
+
 
 int main(int argc, char *argv[]) {
   /* Initialize the monitor. */
@@ -33,3 +33,6 @@ int main(int argc, char *argv[]) {
 
   return is_exit_status_bad();
 }
+
+
+
