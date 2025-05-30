@@ -43,8 +43,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
   bool triggered = false;
   IFDEF(CONFIG_WATCHPOINT, triggered = check_watchpoints());
-  if (triggered) {
-    nemu_state.state = NEMU_STOP;}
+  if (triggered) {nemu_state.state = NEMU_STOP;}
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {
@@ -65,7 +64,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   int space_len = ilen_max - ilen;
   if (space_len < 0) space_len = 0;
   space_len = space_len * 3 + 1;
-  memset(p, ' ', space_len);
+  memset(p, ' ', space_len);//为了添加空格对齐
   p += space_len;
 
 #ifndef CONFIG_ISA_loongarch32r
