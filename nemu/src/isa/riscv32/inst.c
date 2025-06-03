@@ -118,6 +118,45 @@ static int decode_exec(Decode *s) {
   INSTPAT("0000000 ????? ????? 110 ????? 01100 11", or     , R, R(rd) = src1 | src2);
   INSTPAT("0000000 ????? ????? 111 ????? 01100 11", and    , R, R(rd) = src1 & src2);
 
+  INSTPAT("0000001 ????? ????? 000 ????? 01100 11", mul,    R, R(rd) = (sword_t)((sword_t)src1 * (sword_t)src2)); 
+  INSTPAT("0000001 ????? ????? 001 ????? 01100 11", mulh,   R, R(rd) = (sword_t)(((int64_t)(sword_t)src1 * (int64_t)(sword_t)src2) >> 32));
+  INSTPAT("0000001 ????? ????? 010 ????? 01100 11", mulhsu, R, R(rd) = (sword_t)(((int64_t)(sword_t)src1 * (uint64_t)(word_t)src2) >> 32)); // Note: src2 is unsigned, promote to uint64_t then cast product to int64_t for signed shift, or handle carefully
+  INSTPAT("0000001 ????? ????? 011 ????? 01100 11", mulhu,  R, R(rd) = (word_t)(((uint64_t)(word_t)src1 * (uint64_t)(word_t)src2) >> 32));
+  INSTPAT("0000001 ????? ????? 100 ????? 01100 11", div,    R, \
+    if ((sword_t)src2 == 0) { \
+      R(rd) = -1; \
+    } else if ((sword_t)src1 == ((sword_t)1 << 31) && (sword_t)src2 == -1) { \
+      R(rd) = ((sword_t)1 << 31); \
+    } else { \
+      R(rd) = (sword_t)src1 / (sword_t)src2; \
+    } \
+  );
+  INSTPAT("0000001 ????? ????? 101 ????? 01100 11", divu,   R, \
+    if ((word_t)src2 == 0) { \
+      R(rd) = 0xFFFFFFFFU; \
+    } else { \
+      R(rd) = (word_t)src1 / (word_t)src2; \
+    } \
+  );
+  INSTPAT("0000001 ????? ????? 110 ????? 01100 11", rem,    R, \
+    if ((sword_t)src2 == 0) { \
+      R(rd) = (sword_t)src1; \
+    } else if ((sword_t)src1 == ((sword_t)1 << 31) && (sword_t)src2 == -1) {  \
+      R(rd) = 0; \
+    } else { \
+      R(rd) = (sword_t)src1 % (sword_t)src2; \
+    } \
+  );
+  INSTPAT("0000001 ????? ????? 111 ????? 0110011", remu,   R, \
+    if ((word_t)src2 == 0) { \
+      R(rd) = (word_t)src1; \
+    } else { \
+      R(rd) = (word_t)src1 % (word_t)src2; \
+    } \
+  );
+
+  //INSTPAT("0000001 ????? ????? 110 ????? 01100 11", rem    , R, R(rd) = (sword_t)src1 % (sword_t)src2);
+
   INSTPAT("??????? ????? 00000 000 00000 00011 11", fence  , N, /*NOP*/ );
   INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, NEMUTRAP(s->pc, R(17))); // Conventionally, a7 (x17) holds the syscall number
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0

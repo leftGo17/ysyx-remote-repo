@@ -19,6 +19,7 @@
 #include <readline/history.h>
 #include "sdb.h"
 #include <memory/vaddr.h>
+#include <macro.h>
 
 
 static int is_batch_mode = false;
@@ -228,7 +229,7 @@ void sdb_set_batch_mode() {
 }
 
 void sdb_mainloop() {
-
+  MUXDEF(__BATCH_MODE__ ,sdb_set_batch_mode(),);
   //test_expr();
   if (is_batch_mode) {
     cmd_c(NULL);
