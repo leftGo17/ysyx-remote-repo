@@ -115,6 +115,8 @@ endif
 ###目标是$(dis_dir)/tests/dummy.o，那么/%匹配到tests/，那么就找当前目录下tests/dummy.c
 $(DST_DIR)/%.o: %.c
 	@mkdir -p $(dir $@) && echo + CC $<
+#	@echo $(CFLAGS)
+#	@$(CC) -std=gnu11 $(CFLAGS) -E -o $@.i $(realpath $<)
 	@$(CC) -std=gnu11 $(CFLAGS) -c -o $@ $(realpath $<)
 
 ### Rule (compile): a single `.cc` -> `.o` (g++)

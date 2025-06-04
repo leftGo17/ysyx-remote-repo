@@ -118,11 +118,11 @@ static int decode_exec(Decode *s) {
   INSTPAT("0000000 ????? ????? 110 ????? 01100 11", or     , R, R(rd) = src1 | src2);
   INSTPAT("0000000 ????? ????? 111 ????? 01100 11", and    , R, R(rd) = src1 & src2);
 
-  INSTPAT("0000001 ????? ????? 000 ????? 01100 11", mul,    R, R(rd) = (sword_t)((sword_t)src1 * (sword_t)src2)); 
-  INSTPAT("0000001 ????? ????? 001 ????? 01100 11", mulh,   R, R(rd) = (sword_t)(((int64_t)(sword_t)src1 * (int64_t)(sword_t)src2) >> 32));
-  INSTPAT("0000001 ????? ????? 010 ????? 01100 11", mulhsu, R, R(rd) = (sword_t)(((int64_t)(sword_t)src1 * (uint64_t)(word_t)src2) >> 32)); // Note: src2 is unsigned, promote to uint64_t then cast product to int64_t for signed shift, or handle carefully
-  INSTPAT("0000001 ????? ????? 011 ????? 01100 11", mulhu,  R, R(rd) = (word_t)(((uint64_t)(word_t)src1 * (uint64_t)(word_t)src2) >> 32));
-  INSTPAT("0000001 ????? ????? 100 ????? 01100 11", div,    R, \
+  INSTPAT("0000001 ????? ????? 000 ????? 01100 11", mul    , R, R(rd) = (sword_t)((sword_t)src1 * (sword_t)src2)); 
+  INSTPAT("0000001 ????? ????? 001 ????? 01100 11", mulh   , R, R(rd) = (sword_t)(((int64_t)(sword_t)src1 * (int64_t)(sword_t)src2) >> 32));
+  INSTPAT("0000001 ????? ????? 010 ????? 01100 11", mulhsu , R, R(rd) = (sword_t)(((int64_t)(sword_t)src1 * (uint64_t)(word_t)src2) >> 32)); // Note: src2 is unsigned, promote to uint64_t then cast product to int64_t for signed shift, or handle carefully
+  INSTPAT("0000001 ????? ????? 011 ????? 01100 11", mulhu  , R, R(rd) = (word_t)(((uint64_t)(word_t)src1 * (uint64_t)(word_t)src2) >> 32));
+  INSTPAT("0000001 ????? ????? 100 ????? 01100 11", div    , R, \
     if ((sword_t)src2 == 0) { \
       R(rd) = -1; \
     } else if ((sword_t)src1 == ((sword_t)1 << 31) && (sword_t)src2 == -1) { \

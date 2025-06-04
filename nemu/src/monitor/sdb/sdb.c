@@ -229,7 +229,7 @@ void sdb_set_batch_mode() {
 }
 
 void sdb_mainloop() {
-  MUXDEF(__BATCH_MODE__ ,sdb_set_batch_mode(),);
+  //MUXDEF(__BATCH_MODE__ ,sdb_set_batch_mode(),);
   //test_expr();
   if (is_batch_mode) {
     cmd_c(NULL);
